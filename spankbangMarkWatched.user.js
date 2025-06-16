@@ -1,10 +1,14 @@
 
 // ==UserScript==
-// @name        SpankBang - Mark Watched Videos
-// @match       *://spankbang.com/*
-// @version     0.0.1
-// @author      VoltronicAcid
-// @description Marks videos that you've previously seen as watched, across the entire site.
+// @name         SpankBang - Mark Watched Videos
+// @description  Marks videos that you've previously seen as watched, across the entire site.
+// @author       VoltronicAcid
+// @version      0.0.1
+// @match        https?://spankbang.com/*
+// @run-at       document-idle
+// @grant        GM.setValue
+// @grant        GM.getValue
+// @grant        GM.listValue
 // ==/UserScript==
 
 /* jshint esversion: 10 */
