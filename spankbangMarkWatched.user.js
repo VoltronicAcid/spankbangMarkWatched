@@ -4,11 +4,11 @@
 // @description  Marks videos that you've previously seen as watched, across the entire site.
 // @author       VoltronicAcid
 // @version      0.0.1
-// @match        https?://spankbang.com/*
+// @match        http*://*.spankbang.com/*
 // @run-at       document-idle
 // @grant        GM.setValue
 // @grant        GM.getValue
-// @grant        GM.listValue
+// @grant        GM.listValues
 // ==/UserScript==
 
 /* jshint esversion: 10 */
