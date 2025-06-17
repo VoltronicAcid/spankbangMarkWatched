@@ -3,7 +3,7 @@
 // @name          SpankBang - Mark Watched Videos
 // @description   Marks videos that you've previously seen as watched, across the entire site.
 // @author        VoltronicAcid
-// @version       0.2
+// @version       0.2.1
 // @match         http*://*.spankbang.com/*
 // @exclude-match http*://*.spankbang.com/users/history
 // @run-at        document-idle
@@ -95,9 +95,8 @@ const addCurrentVideoToHistory = () => {
 
 const main = async () => {
     addStyles();
-    if (document.location.pathname.match(/.*\/(playlist|video)\/.*/)) {
+    if (document.location.pathname.match(/^\/.*\/(playlist|video)\/.*/)) {
         addCurrentVideoToHistory();
-        return;
     }
 
     const ids = await GM.listValues();
