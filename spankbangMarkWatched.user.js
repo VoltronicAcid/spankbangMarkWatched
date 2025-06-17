@@ -3,7 +3,7 @@
 // @name          SpankBang - Mark Watched Videos
 // @description   Marks videos that you've previously seen as watched, across the entire site.
 // @author        VoltronicAcid
-// @version       0.1
+// @version       0.2
 // @match         http*://*.spankbang.com/*
 // @exclude-match http*://*.spankbang.com/users/history
 // @run-at        document-idle
@@ -16,7 +16,8 @@
 
 const addStyles = () => {
     const style = document.createElement("style");
-    style.textContent = `img.watched {
+    style.textContent = `
+        img.watched {
             filter: grayscale(100%);
         }
         div.centered{
@@ -36,12 +37,14 @@ const addStyles = () => {
             display: inline;
             padding: 2%;
         }`;
-    document.body.appendChild(style);
+    document.head.appendChild(style);
 };
 
-const setWatched = (link) => {
+const setWatchedOverlay = (link) => {
     const image = link.querySelector("img");
     image.classList.add("watched");
+
+    const pic = link.querySelector("picture");
 
     const div = document.createElement("div");
     div.classList.add("centered");
@@ -50,25 +53,19 @@ const setWatched = (link) => {
     p.innerText = "Watched";
 
     div.appendChild(p);
-    link.appendChild(div);
+    pic.appendChild(div);
 };
 
 const addWatchedVideos = async (response) => {
-    const page = response.responseXML;
-    const nextSelector = "#user_panel > div > div > div.pagination > ul > li.next";
-    const vidSelector = "thumb";
+    const vids = Array.from(response.responseXML.getElementsByClassName("thumb"));
 
-    const nextBttn = page.querySelector(nextSelector);
-    const vids = Array.from(page.getElementsByClassName(vidSelector));
-
-    for (const vidObj of vids) {
-        await GM.setValue(vidObj.href, vidObj.title);
+    for (const vid of vids) {
+        const div = vid.closest(".video-item");
+        await GM.setValue(div.dataset.id, vid.title);
     }
-
-    return nextBttn;
 };
 
-const initializeHistory = async () => {
+const addWatchHistory = async () => {
     let nextBttn;
     let pageNum = 1;
 
@@ -77,8 +74,9 @@ const initializeHistory = async () => {
             url: `${document.location.origin}/users/history?page=${pageNum++}`,
             responseType: 'document'
         });
-        nextBttn = await addWatchedVideos(response);
-    } while (!nextBttn.classList.contains("disabled"))
+        await addWatchedVideos(response);
+        nextBttn = response.responseXML.querySelector("#user_panel > div > div > div.pagination > ul > li.next");
+    } while (!nextBttn?.classList.contains("disabled"))
 
     return new Set(await GM.listValues());
 };
@@ -88,23 +86,27 @@ const addCurrentVideoToHistory = () => {
     if (!video) return;
 
     video.addEventListener("playing", async () => {
+        const vidId = document.getElementById("video").dataset.videoid;
         const title = document.querySelector("h1.main_content_title").innerText;
-        await GM.setValue(document.location.pathname, title);
+        await GM.setValue(vidId, title);
     });
 };
 
 
 const main = async () => {
     addStyles();
-    const urls = await GM.listValues();
-    addCurrentVideoToHistory();
-    const watched = urls.length
-        ? new Set(urls)
-        : await initializeHistory();
+    if (document.location.pathname.match(/.*\/(playlist|video)\/.*/)) {
+        addCurrentVideoToHistory();
+        return;
+    }
 
-    Array.from(document.getElementsByClassName("thumb"))
-        .filter((vid) => watched.has(vid.pathname))
-        .map(setWatched);
+    const ids = await GM.listValues();
+    const watched = ids.length
+        ? new Set(ids)
+        : await addWatchHistory();
+
+    Array.from(document.getElementsByClassName("video-item"))
+        .filter((div) => watched.has(div.dataset.id))
+        .map(setWatchedOverlay);
 };
-// GM.listValues().then(keys => GM.deleteValues(keys).then(() => main()));
 main();
