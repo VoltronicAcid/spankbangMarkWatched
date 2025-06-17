@@ -3,7 +3,7 @@
 // @name          SpankBang - Mark Watched Videos
 // @description   Marks videos that you've previously seen as watched, across the entire site.
 // @author        VoltronicAcid
-// @version       0.2.1
+// @version       0.2.2
 // @match         http*://*.spankbang.com/*
 // @exclude-match http*://*.spankbang.com/users/history
 // @run-at        document-idle
@@ -44,7 +44,7 @@ const setWatchedOverlay = (link) => {
     const image = link.querySelector("img");
     image.classList.add("watched");
 
-    const pic = link.querySelector("picture");
+    const imgParent = image.parentElement;
 
     const div = document.createElement("div");
     div.classList.add("centered");
@@ -53,10 +53,16 @@ const setWatchedOverlay = (link) => {
     p.innerText = "Watched";
 
     div.appendChild(p);
-    pic.appendChild(div);
+    imgParent.appendChild(div);
 };
 
-const addWatchedVideos = async (response) => {
+const updateThumbnails = (watched) => {
+    Array.from(document.getElementsByClassName("video-item"))
+        .filter((div) => watched.has(div.dataset.id))
+        .map(setWatchedOverlay);
+};
+
+const saveVideosFromPage = async (response) => {
     const vids = Array.from(response.responseXML.getElementsByClassName("thumb"));
 
     for (const vid of vids) {
@@ -65,7 +71,7 @@ const addWatchedVideos = async (response) => {
     }
 };
 
-const addWatchHistory = async () => {
+const saveWatchHistory = async () => {
     let nextBttn;
     let pageNum = 1;
 
@@ -74,14 +80,14 @@ const addWatchHistory = async () => {
             url: `${document.location.origin}/users/history?page=${pageNum++}`,
             responseType: 'document'
         });
-        await addWatchedVideos(response);
+        await saveVideosFromPage(response);
         nextBttn = response.responseXML.querySelector("#user_panel > div > div > div.pagination > ul > li.next");
     } while (!nextBttn?.classList.contains("disabled"))
 
     return new Set(await GM.listValues());
 };
 
-const addCurrentVideoToHistory = () => {
+const addVideoToHistory = () => {
     const video = document.querySelector("#main_video_player_html5_api");
     if (!video) return;
 
@@ -94,18 +100,17 @@ const addCurrentVideoToHistory = () => {
 
 
 const main = async () => {
+    const ids = await GM.listValues();
     addStyles();
+
     if (document.location.pathname.match(/^\/.*\/(playlist|video)\/.*/)) {
-        addCurrentVideoToHistory();
+        addVideoToHistory();
     }
 
-    const ids = await GM.listValues();
     const watched = ids.length
         ? new Set(ids)
-        : await addWatchHistory();
+        : await saveWatchHistory();
 
-    Array.from(document.getElementsByClassName("video-item"))
-        .filter((div) => watched.has(div.dataset.id))
-        .map(setWatchedOverlay);
+    updateThumbnails(watched);
 };
 main();
