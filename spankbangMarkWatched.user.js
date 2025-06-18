@@ -3,7 +3,7 @@
 // @name          SpankBang - Mark Watched Videos
 // @description   Marks videos that you've previously seen as watched, across the entire site.
 // @author        VoltronicAcid
-// @version       0.2.4
+// @version       0.2.5
 // @match         http*://*.spankbang.com/*
 // @exclude-match http*://*.spankbang.com/users/history
 // @run-at        document-idle
@@ -43,7 +43,7 @@ const setPreviewAsWatched = (vidDiv) => {
         for (const record of mutations) {
             if (record.oldValue === "video-item") {
                 const vid = record.target.querySelector("video");
-                vid.classList.add("watched");
+                if (vid) vid.classList.add("watched");
             }
         }
     });
