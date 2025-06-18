@@ -3,14 +3,12 @@
 // @name          SpankBang - Mark Watched Videos
 // @description   Marks videos that you've previously seen as watched, across the entire site.
 // @author        VoltronicAcid
-// @version       0.2.2
+// @version       0.2.3
 // @match         http*://*.spankbang.com/*
 // @exclude-match http*://*.spankbang.com/users/history
 // @run-at        document-idle
 // @grant         GM.setValue
-// @grant         GM.getValue
 // @grant         GM.listValues
-// @grant         GM.deleteValues
 // @grant         GM.xmlHttpRequest
 // ==/UserScript==
 
@@ -26,7 +24,7 @@ const addStyles = () => {
             height: 100%;
             width: 100%;
             transform: translate(0, -100%);
-            z-index: 999;
+            z-index: 3;
             text-align: center;
         }
         div.centered p {
@@ -40,20 +38,20 @@ const addStyles = () => {
     document.head.appendChild(style);
 };
 
-const setWatchedOverlay = (link) => {
-    const image = link.querySelector("img");
+const setWatchedOverlay = (vidDiv) => {
+    const image = vidDiv.querySelector("img");
     image.classList.add("watched");
 
     const imgParent = image.parentElement;
 
-    const div = document.createElement("div");
-    div.classList.add("centered");
+    const watchedDiv = document.createElement("div");
+    watchedDiv.classList.add("centered");
 
     const p = document.createElement("p");
     p.innerText = "Watched";
 
-    div.appendChild(p);
-    imgParent.appendChild(div);
+    watchedDiv.appendChild(p);
+    imgParent.appendChild(watchedDiv);
 };
 
 const updateThumbnails = (watched) => {
@@ -63,12 +61,16 @@ const updateThumbnails = (watched) => {
 };
 
 const saveVideosFromPage = async (response) => {
+    const watched = new Set();
     const vids = Array.from(response.responseXML.getElementsByClassName("thumb"));
 
     for (const vid of vids) {
         const div = vid.closest(".video-item");
         await GM.setValue(div.dataset.id, vid.title);
+        watched.add(div.dataset.id);
     }
+
+    updateThumbnails(watched);
 };
 
 const saveWatchHistory = async () => {
@@ -82,9 +84,7 @@ const saveWatchHistory = async () => {
         });
         await saveVideosFromPage(response);
         nextBttn = response.responseXML.querySelector("#user_panel > div > div > div.pagination > ul > li.next");
-    } while (!nextBttn?.classList.contains("disabled"))
-
-    return new Set(await GM.listValues());
+    } while (!nextBttn?.classList.contains("disabled"));
 };
 
 const addVideoToHistory = () => {
@@ -98,19 +98,19 @@ const addVideoToHistory = () => {
     });
 };
 
-
-const main = async () => {
-    const ids = await GM.listValues();
-    addStyles();
-
-    if (document.location.pathname.match(/^\/.*\/(playlist|video)\/.*/)) {
-        addVideoToHistory();
-    }
-
-    const watched = ids.length
-        ? new Set(ids)
-        : await saveWatchHistory();
-
-    updateThumbnails(watched);
+const logError = (err) => {
+    console.error(err);
+    console.trace(err);
 };
-main();
+
+addStyles();
+GM.listValues()
+    .then((watched) => {
+        if (watched.size) updateThumbnails(watched);
+        else saveWatchHistory().catch(logError);
+    })
+    .catch(logError);
+
+if (document.location.pathname.match(/^\/.*\/(playlist|video)\/.*/)) {
+    addVideoToHistory();
+}
