@@ -3,7 +3,7 @@
 // @name          SpankBang - Mark Watched Videos
 // @description   Marks videos that you've previously seen as watched, across the entire site.
 // @author        VoltronicAcid
-// @version       0.2.3
+// @version       0.2.4
 // @match         http*://*.spankbang.com/*
 // @exclude-match http*://*.spankbang.com/users/history
 // @run-at        document-idle
@@ -15,7 +15,7 @@
 const addStyles = () => {
     const style = document.createElement("style");
     style.textContent = `
-        img.watched {
+        .watched {
             filter: grayscale(100%);
         }
         div.centered{
@@ -38,11 +38,24 @@ const addStyles = () => {
     document.head.appendChild(style);
 };
 
-const setWatchedOverlay = (vidDiv) => {
-    const image = vidDiv.querySelector("img");
-    image.classList.add("watched");
+const setPreviewAsWatched = (vidDiv) => {
+    const observer = new MutationObserver((mutations) => {
+        for (const record of mutations) {
+            if (record.oldValue === "video-item") {
+                const vid = record.target.querySelector("video");
+                vid.classList.add("watched");
+            }
+        }
+    });
+    observer.observe(vidDiv, { attributes: true, attributeOldValue: true, });
 
-    const imgParent = image.parentElement;
+    return vidDiv;
+};
+
+const setWatchedOverlay = (vidDiv) => {
+    vidDiv.querySelector("img").classList.add("watched");
+
+    const link = vidDiv.querySelector("a.thumb");
 
     const watchedDiv = document.createElement("div");
     watchedDiv.classList.add("centered");
@@ -51,13 +64,16 @@ const setWatchedOverlay = (vidDiv) => {
     p.innerText = "Watched";
 
     watchedDiv.appendChild(p);
-    imgParent.appendChild(watchedDiv);
+    link.appendChild(watchedDiv);
+
+    return vidDiv;
 };
 
 const updateThumbnails = (watched) => {
     Array.from(document.getElementsByClassName("video-item"))
         .filter((div) => watched.has(div.dataset.id))
-        .map(setWatchedOverlay);
+        .map(setWatchedOverlay)
+        .map(setPreviewAsWatched);
 };
 
 const saveVideosFromPage = async (response) => {
@@ -106,7 +122,7 @@ const logError = (err) => {
 addStyles();
 GM.listValues()
     .then((watched) => {
-        if (watched.size) updateThumbnails(watched);
+        if (watched.length) updateThumbnails(new Set(watched));
         else saveWatchHistory().catch(logError);
     })
     .catch(logError);
