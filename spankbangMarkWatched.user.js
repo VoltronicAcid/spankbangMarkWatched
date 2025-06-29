@@ -3,9 +3,11 @@
 // @name          SpankBang - Mark Watched Videos
 // @description   Marks videos that you've previously seen as watched, across the entire site.
 // @author        VoltronicAcid
-// @version       0.2.5
-// @match         http*://*.spankbang.com/*
-// @exclude-match http*://*.spankbang.com/users/history
+// @homepageURL   https://github.com/VoltronicAcid/spankbangMarkWatched
+// @supportURL    https://github.com/VoltronicAcid/spankbangMarkWatched/issues
+// @version       0.2.6
+// @match         http*://*spankbang.com/*
+// @exclude-match http*://*spankbang.com/users/history
 // @run-at        document-idle
 // @grant         GM.setValue
 // @grant         GM.listValues
@@ -41,13 +43,11 @@ const addStyles = () => {
 const setPreviewAsWatched = (vidDiv) => {
     const observer = new MutationObserver((mutations) => {
         for (const record of mutations) {
-            if (record.oldValue === "video-item") {
-                const vid = record.target.querySelector("video");
-                if (vid) vid.classList.add("watched");
-            }
+            const vid = record.target.querySelector("video");
+            if (vid) vid.classList.add("watched");
         }
     });
-    observer.observe(vidDiv, { attributes: true, attributeOldValue: true, });
+    observer.observe(vidDiv, { attributes: true, attributeFilter: ["class"], });
 
     return vidDiv;
 };
