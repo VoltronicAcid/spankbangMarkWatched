@@ -1,4 +1,3 @@
-
 // ==UserScript==
 // @name          SpankBang - Mark Watched Videos
 // @description   Marks videos that you've previously seen as watched, across the entire site.
