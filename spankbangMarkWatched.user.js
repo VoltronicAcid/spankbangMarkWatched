@@ -4,6 +4,7 @@
 // @author        VoltronicAcid
 // @homepageURL   https://github.com/VoltronicAcid/spankbangMarkWatched
 // @supportURL    https://github.com/VoltronicAcid/spankbangMarkWatched/issues
+// @icon          https://www.google.com/s2/favicons?sz=64&domain=spankbang.com
 // @version       0.3.0
 // @match         http*://*spankbang.com/*
 // @exclude-match http*://*spankbang.com/users/history
