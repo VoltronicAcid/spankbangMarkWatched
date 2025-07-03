@@ -9,9 +9,6 @@
 // @match         http*://*spankbang.com/*
 // @exclude-match http*://*spankbang.com/users/history
 // @run-at        document-idle
-// @grant         GM.setValue
-// @grant         GM.listValues
-// @grant         GM.xmlHttpRequest
 // ==/UserScript==
 
 (() => {
