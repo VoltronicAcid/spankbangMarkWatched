@@ -5,7 +5,7 @@
 // @homepageURL   https://github.com/VoltronicAcid/spankbangMarkWatched
 // @supportURL    https://github.com/VoltronicAcid/spankbangMarkWatched/issues
 // @icon          https://www.google.com/s2/favicons?sz=64&domain=spankbang.com
-// @version       0.3.0
+// @version       0.3.1
 // @match         http*://*spankbang.com/*
 // @exclude-match http*://*spankbang.com/users/history
 // @run-at        document-idle
@@ -199,7 +199,7 @@ const setPreviewAsWatched = (vidDiv) => {
 const setWatchedOverlay = (vidDiv) => {
     vidDiv.querySelector("img").classList.add("watched");
 
-    const link = vidDiv.querySelector("a.thumb");
+    const link = vidDiv.querySelector("a.thumb, a[x-data]");
 
     const watchedDiv = document.createElement("div");
     watchedDiv.classList.add("centered");
@@ -241,7 +241,8 @@ const getAllVideos = (db) => {
 
 const markWatchedThumbnails = async (db) => {
     const watched = await getAllVideos(db);
-    Array.from(document.getElementsByClassName("video-item"))
+
+    Array.from(document.querySelectorAll(".js-video-item, .video-item"))
         .filter((div) => watched.has(div.dataset.id))
         .map(setWatchedOverlay)
         .map(setPreviewAsWatched);
